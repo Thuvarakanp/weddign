@@ -6,13 +6,12 @@ const start=new Date(E.start);
 const validDate=Number.isFinite(start.getTime());
 const fmt=options=>validDate?new Intl.DateTimeFormat('en-CA',{timeZone:E.timeZone,...options}).format(start):'Date to be announced';
 const names=E.names.join(' & ');
-const text={...E,heroDate:fmt({weekday:'long',month:'long',day:'numeric',year:'numeric'}),dateShort:fmt({month:'long',day:'numeric',year:'numeric'}),weekday:fmt({weekday:'long'}),time:fmt({hour:'numeric',minute:'2-digit',hour12:true}).toUpperCase()+' onwards'};
+const text={...E,heroDate:fmt({weekday:'long',month:'long',day:'numeric',year:'numeric'}),dateShort:fmt({month:'long',day:'numeric',year:'numeric'}),weekday:fmt({weekday:'long'}),time:fmt({hour:'numeric',minute:'2-digit',hour12:true}).toUpperCase().replace(/\./g,'')+' onwards'};
 for(const el of document.querySelectorAll('[data-text]'))el.textContent=text[el.dataset.text];
 $('#hero-title').replaceChildren(document.createTextNode(E.names[0]+' '),Object.assign(document.createElement('span'),{className:'amp',textContent:'&'}),document.createElement('br'),document.createTextNode(E.names[1]));
 $('.signature').textContent=names;$('.footer-names').textContent=names;
 document.title=names+' | '+E.title;
-$('.hero-bottom>span').textContent=fmt({month:'long',day:'numeric',year:'numeric'}).toUpperCase()+' · MARKHAM, ONTARIO';
-$('.featured figcaption span').textContent=fmt({day:'2-digit',month:'2-digit',year:'numeric'}).split('-').reverse().join('.');
+$('.hero-bottom>span').textContent=fmt({month:'long',day:'numeric',year:'numeric'}).toUpperCase()+' · '+fmt({hour:'numeric',minute:'2-digit',hour12:true}).toUpperCase().replace(/\./g,'')+' · MARKHAM, ONTARIO';
 function fallback(img){const box=document.createElement('div');box.className='image-fallback';box.textContent=names;box.setAttribute('role','img');box.setAttribute('aria-label','Portrait of '+names+' unavailable');img.replaceWith(box);}
 for(const img of document.querySelectorAll('[data-image]')){img.addEventListener('error',()=>fallback(img),{once:true});const next=E.images[img.dataset.image];if(img.getAttribute('src')!==next)img.src=next;if(img.complete&&img.naturalWidth===0)fallback(img);}
 if($('#map').getAttribute('src')!==E.map)$('#map').src=E.map;

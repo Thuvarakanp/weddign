@@ -268,3 +268,14 @@ if (bless) {
     animate(bless, { scale: [1, 1.12, 1] }, { duration: 0.5, ease: EASE });
   });
 }
+
+// ---- Floating RSVP pill: appears after the hero, hides near the form --------
+const pill = document.querySelector("#rsvp-pill");
+if (pill && hero) {
+  let pastHero = false;
+  let atRsvp = false;
+  const sync = () => pill.classList.toggle("is-on", pastHero && !atRsvp);
+  new IntersectionObserver(([e]) => { pastHero = !e.isIntersecting; sync(); }).observe(hero);
+  const rsvp = document.querySelector("#rsvp");
+  if (rsvp) new IntersectionObserver(([e]) => { atRsvp = e.isIntersecting; sync(); }, { threshold: 0.15 }).observe(rsvp);
+}
