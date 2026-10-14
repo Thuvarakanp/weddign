@@ -8,6 +8,9 @@ import { Countdown } from "./sections/Countdown.jsx";
 import { Details } from "./sections/Details.jsx";
 import { Hero } from "./sections/Hero.jsx";
 import { Message } from "./sections/Message.jsx";
+import { Portraits } from "./sections/Portraits.jsx";
+import { Venue } from "./sections/Venue.jsx";
+import { Rsvp } from "./sections/Rsvp.jsx";
 import { Closing } from "./sections/Closing.jsx";
 
 export default function App() {
@@ -54,6 +57,9 @@ export default function App() {
       <Message />
       <Countdown />
       <Details />
+      <Portraits />
+      <Venue />
+      <Rsvp />
       <Closing />
     </div>
   );

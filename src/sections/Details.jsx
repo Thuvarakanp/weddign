@@ -1,16 +1,15 @@
 import { motion } from "framer-motion";
 import { GOLD, INK, SPRING_EASE, eyebrow, goldButton, lede, script } from "../tokens.js";
 import { Rise, GrowRule } from "../components/Reveal.jsx";
-import { RSVP_FORM_URL, DIRECTIONS_URL, ADD_TO_CALENDAR_URL } from "../config.js";
+import { DIRECTIONS_URL, ADD_TO_CALENDAR_URL } from "../config.js";
 
 const actionButton = { ...goldButton, fontSize: 13, padding: "16px 30px" };
 
-function ActionLink({ href, children }) {
+function ActionLink({ href, children, external = true }) {
   return (
     <motion.a
       href={href}
-      target="_blank"
-      rel="noreferrer"
+      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
       whileHover={{ backgroundColor: GOLD, color: "#fff", y: -3 }}
       whileTap={{ scale: 0.96 }}
       transition={{ duration: 0.5, ease: SPRING_EASE }}
@@ -53,7 +52,7 @@ export function Details() {
             <br />
             October 25th, 2026
           </p>
-          <p style={{ ...lede, fontSize: 16.5, marginTop: 18 }}>The ceremony begins at 6 o&rsquo;clock in the evening</p>
+          <p style={{ ...lede, fontSize: 16.5, marginTop: 18 }}>The celebration begins at 6:30 in the evening</p>
         </Rise>
 
         <Rise delay={0.3}>
@@ -61,11 +60,11 @@ export function Details() {
             Where
           </h3>
           <p style={{ fontFamily: "'Cinzel', serif", fontSize: 21, lineHeight: 1.9, color: INK, margin: 0 }}>
-            J &amp; J Swagat
+            Prince Hall
             <br />
-            Convention Center
+            J &amp; J Swagat Convention Center
           </p>
-          <p style={{ ...lede, fontSize: 16.5, marginTop: 18 }}>Dinner &amp; celebrations to follow</p>
+          <p style={{ ...lede, fontSize: 16.5, marginTop: 18 }}>415 Hood Road, Markham. Dinner &amp; celebrations to follow</p>
         </Rise>
       </div>
 
@@ -74,7 +73,7 @@ export function Details() {
         style={{ marginTop: 96, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}
         className="actionRow"
       >
-        <ActionLink href={RSVP_FORM_URL}>RSVP</ActionLink>
+        <ActionLink href="#rsvp" external={false}>RSVP</ActionLink>
         <ActionLink href={DIRECTIONS_URL}>Get Directions</ActionLink>
         <ActionLink href={ADD_TO_CALENDAR_URL}>Add to Calendar</ActionLink>
       </Rise>

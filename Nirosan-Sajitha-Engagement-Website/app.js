@@ -1,0 +1,38 @@
+'use strict';
+const E=window.EVENT;
+const $=s=>document.querySelector(s);
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+const start=new Date(E.start);
+const validDate=Number.isFinite(start.getTime());
+const fmt=options=>validDate?new Intl.DateTimeFormat('en-CA',{timeZone:E.timeZone,...options}).format(start):'Date to be announced';
+const names=E.names.join(' & ');
+const text={...E,heroDate:fmt({weekday:'long',month:'long',day:'numeric',year:'numeric'}),dateShort:fmt({month:'long',day:'numeric',year:'numeric'}),weekday:fmt({weekday:'long'}),time:fmt({hour:'numeric',minute:'2-digit',hour12:true}).toUpperCase()+' onwards'};
+for(const el of document.querySelectorAll('[data-text]'))el.textContent=text[el.dataset.text];
+$('#hero-title').replaceChildren(document.createTextNode(E.names[0]+' '),Object.assign(document.createElement('span'),{className:'amp',textContent:'&'}),document.createElement('br'),document.createTextNode(E.names[1]));
+$('.signature').textContent=names;$('.footer-names').textContent=names;
+document.title=names+' | '+E.title;
+$('.hero-bottom>span').textContent=fmt({month:'long',day:'numeric',year:'numeric'}).toUpperCase()+' · MARKHAM, ONTARIO';
+$('.featured figcaption span').textContent=fmt({day:'2-digit',month:'2-digit',year:'numeric'}).split('-').reverse().join('.');
+function fallback(img){const box=document.createElement('div');box.className='image-fallback';box.textContent=names;box.setAttribute('role','img');box.setAttribute('aria-label','Portrait of '+names+' unavailable');img.replaceWith(box);}
+for(const img of document.querySelectorAll('[data-image]')){img.addEventListener('error',()=>fallback(img),{once:true});const next=E.images[img.dataset.image];if(img.getAttribute('src')!==next)img.src=next;if(img.complete&&img.naturalWidth===0)fallback(img);}
+if($('#map').getAttribute('src')!==E.map)$('#map').src=E.map;
+$('#directions').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(E.venue+' '+E.address);
+$('#phone').href='tel:'+E.phone;
+// Progressive enhancement: content is visible until a working observer is attached.
+if('IntersectionObserver'in window&&!reduced.matches){const observer=new IntersectionObserver(entries=>{for(const item of entries)if(item.isIntersecting){item.target.classList.add('is-visible');item.target.classList.remove('is-waiting');observer.unobserve(item.target);}},{threshold:.1});for(const el of document.querySelectorAll('.reveal')){if(el.getBoundingClientRect().top>innerHeight){el.classList.add('is-waiting');observer.observe(el);}}}
+let countdownInterval;
+function countdown(){if(!validDate){$('.countdown-wrap').hidden=true;return;}const distance=start.getTime()-Date.now();if(distance<=0){$('#countdown-heading').textContent='OUR CELEBRATION HAS BEGUN';$('#countdown').textContent='Let’s make beautiful memories together.';clearInterval(countdownInterval);return;}const t=Math.floor(distance/1000);for(const [key,value]of Object.entries({days:Math.floor(t/86400),hours:Math.floor(t/3600)%24,minutes:Math.floor(t/60)%60,seconds:t%60})){const node=$('#'+key),next=String(value).padStart(2,'0');if(node.textContent!==next)node.textContent=next;}}
+countdown();if(validDate&&start>Date.now())countdownInterval=setInterval(countdown,1000);
+// A start-only calendar event is valid; no end time is guessed.
+function icsEscape(value){return value.replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
+function utcDate(value){return new Date(value).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
+function foldLine(line){let lines=[],part='';for(const c of line){if(new TextEncoder().encode(part+c).length>73){lines.push(part);part=' '+c;}else part+=c;}lines.push(part);return lines.join('\r\n');}
+$('#calendar').disabled=!validDate;
+$('#calendar').addEventListener('click',()=>{try{const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//NS Invitation//Engagement//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:nirosan-sajitha-'+utcDate(E.start)+'@invitation','DTSTAMP:'+utcDate(Date.now()),'DTSTART:'+utcDate(E.start)];if(E.end&&new Date(E.end)>start)lines.push('DTEND:'+utcDate(E.end));lines.push('SUMMARY:'+icsEscape(names+' | '+E.title),'LOCATION:'+icsEscape(E.hall+', '+E.venue+', '+E.address),'DESCRIPTION:'+icsEscape('Join us at '+text.time+' ('+E.timeZone+'). RSVP: '+E.contact+' '+E.displayPhone+'. End time not specified.'),'END:VEVENT','END:VCALENDAR');const blob=new Blob([lines.map(foldLine).join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nirosan-sajitha-engagement.ics';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);$('#calendar-note').textContent='Calendar file prepared. Open it to save the 6:30 PM start time; no end time is set.';}catch{$('#calendar-note').textContent='Could not prepare the calendar file. Please add the date and time manually.';}});
+const form=$('#rsvp-form');
+for(const radio of form.querySelectorAll('[name=attendance]'))radio.addEventListener('change',()=>{const declining=form.elements.attendance.value==='no';$('#guest-count-wrap').hidden=declining;$('#guest-count').disabled=declining;$('#guest-count').required=!declining;$('#message-preview').hidden=true;$('#form-status').textContent='';});
+form.addEventListener('input',()=>{$('#message-preview').hidden=true;$('#form-status').textContent='';});
+let preparedMessage='';
+form.addEventListener('submit',async event=>{event.preventDefault();const name=$('#guest-name');name.setCustomValidity(name.value.trim()?'':'Please enter your name.');if(!form.reportValidity())return;const button=$('#prepare-rsvp');button.disabled=true;button.textContent='Preparing your message…';try{await new Promise(resolve=>setTimeout(resolve,200));const data=new FormData(form);const yes=data.get('attendance')==='yes';preparedMessage='Hi '+E.contact+', this is '+name.value.trim()+'.\n\n'+(yes?'I’m happy to attend your engagement celebration on '+text.dateShort+'.\nNumber of guests (including me): '+data.get('guests')+'.':'Thank you for the invitation. Unfortunately, I’m unable to attend your engagement celebration on '+text.dateShort+'.');const note=String(data.get('message')||'').trim();if(note)preparedMessage+='\n\n'+note;$('#preview-text').textContent=preparedMessage;const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;$('#send-sms').href='sms:'+E.phone+(isIOS?'&':'?')+'body='+encodeURIComponent(preparedMessage);$('#message-preview').hidden=false;$('#form-status').textContent='Your message is ready. It has not been sent yet.';$('#message-preview').scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'nearest'});}catch{$('#form-status').textContent='We couldn’t prepare the message. Please call or text '+E.contact+' at '+E.displayPhone+'.';}finally{button.disabled=false;button.textContent='Prepare RSVP message ↗';}});
+$('#guest-name').addEventListener('input',()=>$('#guest-name').setCustomValidity(''));
+$('#copy-message').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(preparedMessage);$('#form-status').textContent='Message copied. Send it to '+E.displayPhone+' to confirm your RSVP.';}catch{$('#form-status').textContent='Copy was unavailable. Select and copy the message above, then send it to '+E.displayPhone+'.';}});
